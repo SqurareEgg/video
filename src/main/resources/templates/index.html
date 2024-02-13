@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Static Template</title>
+    <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <style>
+        video {
+            margin: auto;
+            width: 800px;
+            height: 600px;
+            background: black;
+        }
+        .section {
+            margin: 15px;
+        }
+        #round{
+            width: 100px;
+            height: 100px;
+
+            border-radius: 50%;
+            position:absolute;
+            background-color: red;
+            animation-name: move;
+            animation-duration: 20s;
+            /*이 부분을 바꾸면 됨(애니메이션 시간)*/
+            display: none;
+        }
+        @keyframes move {
+            from{
+                top: 20%;
+                left: 20%;
+            }
+            20%{
+                top: 20%;
+                left: 20%;
+            }
+
+
+            26.6%{
+                top: 20%;
+                left: 80%;
+            }
+            46.6%{
+                top: 20%;
+                left: 80%;
+            }
+
+            53.2%{
+                top:80%;
+                left: 20%;
+            }
+            73.2%{
+                top:80%;
+                left: 20%;
+            }
+            80%{
+                top: 80%;
+                left: 80%;
+
+            }
+            to{
+                top: 80%;
+                left: 80%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div class="section" style="margin: auto auto">
+    <video id="video-output"></video>
+    <br />
+    <button id="start-btn">녹화 시작</button>
+    <div id="round">
+
+    </div>
+</div>
+
+<script>
+    const videoOutput = document.getElementById('video-output');
+    const startBtn = document.getElementById('start-btn');
+
+    const recordedVideo = document.getElementById('recorded-video');
+    const round = document.getElementById("round")
+
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedMediaURL = null;
+    let videoBlob = null;
+
+    // 유저의 카메라로 부터 입력을 사용할 수 있도록 요청
+    navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(function (newMediaStream) {
+            mediaStream = newMediaStream;
+
+            // 카메라의 입력을 실시간으로 비디오 태그에서 확인
+            videoOutput.srcObject = mediaStream;
+            videoOutput.onloadedmetadata = function (e) {
+                videoOutput.play();
+            };
+        });
+
+    // 녹화 시작 버튼 클릭 시 빌생하는 이벤트 핸들러 등록
+    startBtn.addEventListener('click', function () {
+        let recordedChunks = [];
+        // 1.MediaStream을 매개변수로 MediaRecorder 생성자를 호출
+        mediaRecorder = new MediaRecorder(mediaStream, {
+            mimeType: 'video/webm;',
+        });
+
+        // 2. 전달받는 데이터를 처리하는 이벤트 핸들러 등록
+        mediaRecorder.ondataavailable = function (event) {
+            if (event.data && event.data.size > 0) {
+                console.log('ondataavailable');
+                recordedChunks.push(event.data);
+            }
+        };
+
+        // 3. 녹화 중지 이벤트 핸들러 등록
+        mediaRecorder.onstop = function () {
+            // createObjectURL로 생성한 url을 사용하지 않으면 revokeObjectURL 함수로 지워줘야합니다.
+            // 그렇지 않으면 메모리 누수 문제가 발생합니다.
+            // if (recordedMediaURL) {
+            //     URL.revokeObjectURL(recordedMediaURL);
+            // }
+
+            videoBlob = new Blob(recordedChunks, {type: 'video/webm;'});
+            recordedMediaURL = window.URL.createObjectURL(videoBlob);
+
+            // recordedMediaURL = URL.createObjectURL(blob);
+            //recordedVideo.src = recordedMediaURL;
+            sendAvi(videoBlob);
+            console.log("video capture end");
+        };
+
+        mediaRecorder.start();
+        videoOutput.style.display="none";
+        round.style.display="block";
+
+
+        setTimeout(function () {
+            if (mediaRecorder) {
+                // 5. 10초 뒤에 녹화 중지
+                mediaRecorder.stop();
+                mediaRecorder=null;
+            }
+        }, 20000); //(20초동안 녹화 후 스톰)
+    });
+    const sendAvi = blob => {
+        if (blob ==null) return;
+
+        let filename = new Date().toString()+".avi";
+        const file = new File([blob],filename);
+
+        let fd = new FormData();
+        fd.append("fname", filename);
+        fd.append("file", file);
+
+        $.ajax({
+            url: "/capture",
+            type: "POST",
+            contentType: false,
+            processData: false,
+            data: fd,
+            success: function (data, textStatus){
+                if(data != null){
+                    setUserResponse(data);
+                    send(data);
+                }
+            },
+            error: function (errorMessage) {
+                setUserResponse("");
+                console.log("error"+errorMessage);
+
+            },
+        }).done(function(data){
+            console.log(data)
+        });
+    }
+
+
+
+
+</script>
+</body>
+</html>

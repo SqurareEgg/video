@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Title</title>
+
+    <style>
+        #round{
+            width: 100px;
+            height: 100px;
+
+            border-radius: 50%;
+            position:absolute;
+            background-color: red;
+            animation-name: move;
+            animation-duration: 20s;
+            display: none;
+        }
+        @keyframes move {
+            from{
+                top: 20%;
+                left: 20%;
+            }
+            20%{
+                top: 20%;
+                left: 20%;
+            }
+
+
+            26.6%{
+                top: 20%;
+                left: 80%;
+            }
+            46.6%{
+                top: 20%;
+                left: 80%;
+            }
+
+            53.2%{
+                top:80%;
+                left: 20%;
+            }
+            73.2%{
+                top:80%;
+                left: 20%;
+            }
+            80%{
+                top: 80%;
+                left: 80%;
+
+            }
+            to{
+                top: 80%;
+                left: 80%;
+            }
+        }
+    </style>
+
+
+</head>
+<body>
+<div>
+    <div id = round>
+
+    </div>
+</div>
+<button id = button>
+버튼
+</button>
+
+<script>
+    const button = document.querySelector("button")
+    const round = document.getElementById("round")
+
+    const buttonClickHandler = () =>{
+        round.style.display = "block";
+    }
+    button.onclick =buttonClickHandler;
+</script>
+</body>
+</html>
